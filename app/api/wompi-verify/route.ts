@@ -4,10 +4,21 @@ export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const res = await fetch(`https://production.wompi.co/v1/transactions/${id}`, {
-    headers: { Authorization: `Bearer ${process.env.PRIVATE_KEY}` },
-  });
+  const privateKey = process.env.PRIVATE_KEY;
+  if (!privateKey) {
+    return NextResponse.json({ error: 'Missing private key' }, { status: 500 });
+  }
 
-  const data = await res.json();
-  return NextResponse.json({ status: data.data?.status });
+  try {
+    const res = await fetch(`https://sandbox.wompi.co/v1/transactions/${id}`, {
+      headers: { Authorization: `Bearer ${privateKey}` },
+    });
+
+    const data = await res.json();
+
+    return NextResponse.json({ status: data.data?.status });
+  } catch (err) {
+    console.error('Error consultando Wompi:', err);
+    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+  }
 }
