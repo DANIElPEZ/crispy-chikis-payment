@@ -73,7 +73,7 @@ export default function Home() {
           
           <rect className="w-full h-19" fill="#147c88" />
           {Array.from({ length: 20 }).map((_, i) => (
-            <circle key={i} cx={30 + i * 60} cy={0} r={30} fill="#f38e35" />
+            <circle key={i} cx={30 + i * 60} cy={0} r={33} fill="#f38e35" />
           ))}
         </svg>
       <div
@@ -114,7 +114,7 @@ export default function Home() {
         />
         <input type="hidden" name="redirect-url" value={redirectUrl} />
 
-        <button type="submit"></button>
+        <button type="submit" ref={submitRef}></button>
       </form>
     </div>
   );

@@ -51,7 +51,7 @@ export default function ResultTransaction() {
               
               <rect className="w-full h-19" fill="#147c88" />
               {Array.from({ length: 20 }).map((_, i) => (
-                <circle key={i} cx={30 + i * 60} cy={0} r={30} fill="#f38e35" />
+                <circle key={i} cx={30 + i * 60} cy={0} r={33} fill="#f38e35" />
               ))}
             </svg>
           <div
