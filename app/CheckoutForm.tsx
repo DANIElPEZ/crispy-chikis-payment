@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 const CURRENCY = "COP";
 const redirectUrl = `https://crispy-chikis-payment.vercel.app/resultado`;
@@ -21,7 +22,15 @@ export default function Home() {
   const publicKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY || "";
   const [signature, setSignature] = useState<string | null>(null);
   const [reference] = useState(() => generateReference(username));
-  const [loading, setLoading] = useState(true);
+  const [dots, setDots] = useState(".");
+  const submitRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((d) => (d.length >= 3 ? "." : d + "."));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     async function fetchSignature() {
@@ -39,26 +48,61 @@ export default function Home() {
         setSignature(data.signature);
       } catch (err) {
         console.error("Error generando firma:", err);
-      } finally {
-        setLoading(false);
       }
     }
     fetchSignature();
   }, []);
 
+  useEffect(() => {
+    if (signature && submitRef.current) {
+      const timer = setTimeout(() => {
+        submitRef.current?.click();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [signature]);
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg border border-gray-100 text-center">
-      <div className="mb-6">
-        <p className="text-sm text-gray-500 uppercase tracking-wide font-semibold">
-          Total a pagar
-        </p>
-        <p className="text-3xl font-extrabold text-gray-900">
-          ${(parseInt(amountInCents) / 100).toLocaleString("es-CO")}{" "}
-          <span className="text-lg font-medium text-gray-500">COP</span>
-        </p>
+    <div className="w-full h-screen flex flex-col items-center justify-center ">
+        <svg
+          viewBox="0 0 1200 60"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-13"
+        >
+          
+          <rect className="w-full h-19" fill="#147c88" />
+          {Array.from({ length: 20 }).map((_, i) => (
+            <circle key={i} cx={30 + i * 60} cy={0} r={30} fill="#f38e35" />
+          ))}
+        </svg>
+      <div
+        className="w-full flex items-center justify-center bg-[#147c88] h-[29%]"
+      />
+      <div className="w-full flex-1 flex flex-col items-center justify-center gap-6 bg-[#f38e35]"></div>
+
+      <div className="absolute z-10 flex flex-col items-center gap-6 top-20">
+        <div className="rounded-2xl border-4 border-[#24151a]">
+          <Image
+            src="/logo.jpeg"
+            alt="Crispy Chikis"
+            width={250}
+            height={200}
+            className="rounded-xl"
+          />
+        </div>
+        <div className="text-center">
+          <p className="text-white font-extrabold text-xl tracking-wide font-serif ">
+            Redireccionando{dots}
+          </p>
+        </div>
       </div>
-      <form action="https://checkout.wompi.co/p/" method="GET">
+
+      <form
+        action="https://checkout.wompi.co/p/"
+        method="GET"
+        className="hidden"
+      >
         <input type="hidden" name="public-key" value={publicKey} />
         <input type="hidden" name="currency" value={CURRENCY} />
         <input type="hidden" name="amount-in-cents" value={amountInCents} />
@@ -70,32 +114,8 @@ export default function Home() {
         />
         <input type="hidden" name="redirect-url" value={redirectUrl} />
 
-        <button
-        type="submit"
-        disabled={loading || !signature}
-        className={`
-          w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200
-          ${loading || !signature 
-            ? 'bg-gray-300 cursor-not-allowed text-gray-500' 
-            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-indigo-200 active:scale-[0.98]'}
-        `}
-      >
-        {loading ? (
-          <span className="flex items-center justify-center">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Cargando...
-          </span>
-        ) : (
-          `Pagar ${(parseInt(amountInCents) / 100).toLocaleString('es-CO')} COP`
-        )}
-      </button>
+        <button type="submit"></button>
       </form>
-      <p className="mt-4 text-xs text-gray-400">
-        Pago seguro procesado por <strong>Wompi</strong>
-      </p>
     </div>
   );
 }
